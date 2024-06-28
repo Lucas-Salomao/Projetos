@@ -73,79 +73,6 @@
           }
         }
       }
-    },
-    "net8.0/linux-x64": {
-      "Amazon.Lambda.APIGatewayEvents/2.7.0": {
-        "type": "package",
-        "compile": {
-          "lib/net8.0/Amazon.Lambda.APIGatewayEvents.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net8.0/Amazon.Lambda.APIGatewayEvents.dll": {
-            "related": ".xml"
-          }
-        }
-      },
-      "Amazon.Lambda.Core/2.2.0": {
-        "type": "package",
-        "compile": {
-          "lib/net8.0/Amazon.Lambda.Core.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net8.0/Amazon.Lambda.Core.dll": {
-            "related": ".xml"
-          }
-        }
-      },
-      "Amazon.Lambda.Serialization.SystemTextJson/2.4.0": {
-        "type": "package",
-        "dependencies": {
-          "Amazon.Lambda.Core": "2.2.0"
-        },
-        "compile": {
-          "lib/net8.0/Amazon.Lambda.Serialization.SystemTextJson.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net8.0/Amazon.Lambda.Serialization.SystemTextJson.dll": {
-            "related": ".xml"
-          }
-        }
-      },
-      "AWSSDK.Core/3.7.301.9": {
-        "type": "package",
-        "compile": {
-          "lib/net8.0/AWSSDK.Core.dll": {
-            "related": ".pdb;.xml"
-          }
-        },
-        "runtime": {
-          "lib/net8.0/AWSSDK.Core.dll": {
-            "related": ".pdb;.xml"
-          }
-        }
-      },
-      "AWSSDK.DynamoDBv2/3.7.301": {
-        "type": "package",
-        "dependencies": {
-          "AWSSDK.Core": "[3.7.301.9, 4.0.0)"
-        },
-        "compile": {
-          "lib/net8.0/AWSSDK.DynamoDBv2.dll": {
-            "related": ".pdb;.xml"
-          }
-        },
-        "runtime": {
-          "lib/net8.0/AWSSDK.DynamoDBv2.dll": {
-            "related": ".pdb;.xml"
-          }
-        }
-      }
     }
   },
   "libraries": {
@@ -274,23 +201,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\JessicaFressato\\.nuget\\packages\\": {},
+    "C:\\Users\\sn1050759\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\JessicaFressato\\Desktop\\Projetos\\ExamplesUsingAwsSdk-main\\ExampleCrud\\C#\\InsertBooks.Lambda\\InsertBooks.Lambda.csproj",
+      "projectUniqueName": "C:\\Users\\sn1050759\\Desktop\\Projetos\\InsertBooks.Lambda.csproj",
       "projectName": "InsertBooks.Lambda",
-      "projectPath": "C:\\Users\\JessicaFressato\\Desktop\\Projetos\\ExamplesUsingAwsSdk-main\\ExampleCrud\\C#\\InsertBooks.Lambda\\InsertBooks.Lambda.csproj",
-      "packagesPath": "C:\\Users\\JessicaFressato\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\JessicaFressato\\Desktop\\Projetos\\ExamplesUsingAwsSdk-main\\ExampleCrud\\C#\\InsertBooks.Lambda\\obj\\",
+      "projectPath": "C:\\Users\\sn1050759\\Desktop\\Projetos\\InsertBooks.Lambda.csproj",
+      "packagesPath": "C:\\Users\\sn1050759\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\sn1050759\\Desktop\\Projetos\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\JessicaFressato\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\sn1050759\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -299,7 +226,6 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -312,11 +238,6 @@
         "warnAsError": [
           "NU1605"
         ]
-      },
-      "restoreAuditProperties": {
-        "enableAudit": "true",
-        "auditLevel": "low",
-        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -356,12 +277,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.300/PortableRuntimeIdentifierGraph.json"
-      }
-    },
-    "runtimes": {
-      "linux-x64": {
-        "#import": []
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.101/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

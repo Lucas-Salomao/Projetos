@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "dgSpecHash": "cP0jV0bO2tQ=",
+  "dgSpecHash": "+fGJf6kffa4MEjizwTFqUNgaT8OxodyguEebBrnShEmaRDb2kMJyWNhtcoZBMQZjZAnpAFW+sQLQJ9njQkZLyA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\JessicaFressato\\Desktop\\Projetos\\ExamplesUsingAwsSdk-main\\ExampleCrud\\C#\\InsertBooks.Lambda\\InsertBooks.Lambda.csproj",
+  "projectFilePath": "C:\\Users\\sn1050759\\Desktop\\Projetos\\InsertBooks.Lambda.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\JessicaFressato\\.nuget\\packages\\amazon.lambda.apigatewayevents\\2.7.0\\amazon.lambda.apigatewayevents.2.7.0.nupkg.sha512",
-    "C:\\Users\\JessicaFressato\\.nuget\\packages\\amazon.lambda.core\\2.2.0\\amazon.lambda.core.2.2.0.nupkg.sha512",
-    "C:\\Users\\JessicaFressato\\.nuget\\packages\\amazon.lambda.serialization.systemtextjson\\2.4.0\\amazon.lambda.serialization.systemtextjson.2.4.0.nupkg.sha512",
-    "C:\\Users\\JessicaFressato\\.nuget\\packages\\awssdk.core\\3.7.301.9\\awssdk.core.3.7.301.9.nupkg.sha512",
-    "C:\\Users\\JessicaFressato\\.nuget\\packages\\awssdk.dynamodbv2\\3.7.301\\awssdk.dynamodbv2.3.7.301.nupkg.sha512"
+    "C:\\Users\\sn1050759\\.nuget\\packages\\amazon.lambda.apigatewayevents\\2.7.0\\amazon.lambda.apigatewayevents.2.7.0.nupkg.sha512",
+    "C:\\Users\\sn1050759\\.nuget\\packages\\amazon.lambda.core\\2.2.0\\amazon.lambda.core.2.2.0.nupkg.sha512",
+    "C:\\Users\\sn1050759\\.nuget\\packages\\amazon.lambda.serialization.systemtextjson\\2.4.0\\amazon.lambda.serialization.systemtextjson.2.4.0.nupkg.sha512",
+    "C:\\Users\\sn1050759\\.nuget\\packages\\awssdk.core\\3.7.301.9\\awssdk.core.3.7.301.9.nupkg.sha512",
+    "C:\\Users\\sn1050759\\.nuget\\packages\\awssdk.dynamodbv2\\3.7.301\\awssdk.dynamodbv2.3.7.301.nupkg.sha512"
   ],
   "logs": []
 }
