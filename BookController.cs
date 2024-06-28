@@ -1,22 +1,33 @@
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
+using Amazon.SQS;
+using Amazon.SQS.Model;
 using Models;
 
 [assembly: LambdaSerializer(typeof(DefaultLambdaJsonSerializer))]
 
-public class BookController
+public class PedidoController
 {
-    // Define o nome da tabela do DynamoDB para armazenar os livros.
-    private const string TABLE_NAME = "Books";
+    // Variáveis de ambiente para configuração
+    private readonly string _produtoApiUrl = Environment.GetEnvironmentVariable("PRODUTO_API_URL");
+    private readonly string _sqsQueueUrl = Environment.GetEnvironmentVariable("SQS_QUEUE_URL");
+    private readonly string _s3BucketName = Environment.GetEnvironmentVariable("S3_BUCKET_NAME");
 
-    // Cria uma resposta padrão para as requisições do API Gateway.
+    private readonly string _nomeLoja = "Minha Loja"; // Nome da sua loja
+
     private APIGatewayProxyResponse GetDefaultResponse()
     {
+        // Define a resposta padrão com headers de CORS
         var response = new APIGatewayProxyResponse()
         {
             Headers = new Dictionary<string, string>(),
@@ -25,145 +36,144 @@ public class BookController
 
         response.Headers.Add("Access-Control-Allow-Origin", "*");
         response.Headers.Add("Access-Control-Allow-Headers", "*");
-        response.Headers.Add("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, DELETE");
+        response.Headers.Add("Access-Control-Allow-Methods", "OPTIONS, POST");
         response.Headers.Add("Content-Type", "application/json");
 
         return response;
     }
 
-    // Obtém o nome da região do AWS.
+    // Obtem o nome do produto da API de produtos
+    private async Task<string> GetProductName(string idProduto)
+    {
+        // Cria um cliente HttpClient para realizar a requisição
+        using var client = new HttpClient();
+
+        // Monta a URL da API de produtos
+        var url = $"{_produtoApiUrl}/{idProduto}";
+
+        // Realiza a requisição GET
+        var response = await client.GetAsync(url);
+
+        // Verifica se a requisição foi bem-sucedida
+        if (response.IsSuccessStatusCode)
+        {
+            // Deserializa a resposta JSON em um objeto Produto
+            var produto = await response.Content.ReadFromJsonAsync<Produto>();
+
+            // Retorna o nome do produto
+            return produto.NomeProduto;
+        }
+        else
+        {
+            // Caso haja algum erro, retorna uma mensagem de erro
+            throw new Exception($"Erro ao obter o nome do produto: {response.StatusCode}");
+        }
+    }
+
+    // Salva o pedido no DynamoDB
+    private async Task SavePedido(Pedido pedido)
+    {
+        // Cria um cliente DynamoDB
+        var dbClient = new AmazonDynamoDBClient(RegionEndpoint.GetBySystemName(GetRegionName()));
+
+        // Cria um contexto DynamoDB
+        using var dbContext = new DynamoDBContext(dbClient);
+
+        // Salva o pedido no DynamoDB
+        await dbContext.SaveAsync(pedido);
+    }
+
+    // Envia a mensagem para a fila do SQS
+    private async Task SendSqsMessage(Pedido pedido)
+    {
+        // Cria um cliente SQS
+        var sqsClient = new AmazonSQSClient(RegionEndpoint.GetBySystemName(GetRegionName()));
+
+        // Cria a mensagem para ser enviada
+        var message = new SendMessageRequest
+        {
+            QueueUrl = _sqsQueueUrl,
+            MessageBody = JsonSerializer.Serialize(pedido)
+        };
+
+        // Envia a mensagem para a fila
+        await sqsClient.SendMessageAsync(message);
+    }
+
+    // Salva os dados do pedido e do envio no S3
+    private async Task SaveToS3(Pedido pedido, string transportadoraUrl)
+    {
+        // Cria um cliente S3
+        var s3Client = new AmazonS3Client(RegionEndpoint.GetBySystemName(GetRegionName()));
+
+        // Monta o objeto de upload para o S3
+        var uploadRequest = new PutObjectRequest
+        {
+            BucketName = _s3BucketName,
+            Key = $"pedidos/{Guid.NewGuid()}.json",
+            ContentBody = JsonSerializer.Serialize(new
+            {
+                pedido,
+                transportadoraUrl
+            })
+        };
+
+        // Envia o objeto para o S3
+        await s3Client.PutObjectAsync(uploadRequest);
+    }
+
     private string GetRegionName() =>
         Environment.GetEnvironmentVariable("AWS_REGION") ?? "sa-east-1";
 
-    // Salva um novo livro na tabela do DynamoDB.
-    public async Task<APIGatewayProxyResponse> SaveBook(APIGatewayProxyRequest request, ILambdaContext context)
+    public async Task<APIGatewayProxyResponse> CriarPedido(APIGatewayProxyRequest request, ILambdaContext context)
     {
-        // Deserializa o objeto 'Book' a partir do corpo da requisição.
-        var book = JsonSerializer.Deserialize<Book>(request.Body);
-
-        // Cria um cliente para o DynamoDB.
-        var dbClient = new AmazonDynamoDBClient(RegionEndpoint.GetBySystemName(GetRegionName()));
-
-        // Cria um contexto para interagir com o DynamoDB.
-        using (var dbContext = new DynamoDBContext(dbClient))
+        try
         {
-            // Salva o livro na tabela.
-            await dbContext.SaveAsync(book);
-        }
+            // Deserializa o payload da requisição em um objeto Pedido
+            var pedido = JsonSerializer.Deserialize<Pedido>(request.Body);
 
-        // Cria uma resposta com a mensagem de sucesso.
-        var response = GetDefaultResponse();
-        response.Body = JsonSerializer.Serialize(new { Message = "Book saved successfully!" });
-
-        // Retorna a resposta.
-        return response;
-    }
-
-    // Obtém um livro específico da tabela do DynamoDB pelo seu ID.
-    public async Task<APIGatewayProxyResponse> GetBook(APIGatewayProxyRequest request, ILambdaContext context)
-    {
-        // Obtém o ID do livro a partir do parâmetro de caminho da requisição.
-        var bookId = request.PathParameters["bookId"];
-
-        // Cria um cliente para o DynamoDB.
-        var dbClient = new AmazonDynamoDBClient(RegionEndpoint.GetBySystemName(GetRegionName()));
-
-        // Cria um contexto para interagir com o DynamoDB.
-        using (var dbContext = new DynamoDBContext(dbClient))
-        {
-            // Busca o livro pelo seu ID.
-            var book = await dbContext.LoadAsync<Book>(bookId);
-
-            // Se o livro for encontrado, retorna uma resposta com o livro.
-            if (book != null)
+            // Obtem o nome dos produtos da API de produtos
+            foreach (var produto in pedido.Produtos)
             {
-                var response = GetDefaultResponse();
-                response.Body = JsonSerializer.Serialize(book);
-                return response;
+                produto.NomeProduto = await GetProductName(produto.IdProduto.ToString());
             }
-        }
 
-        // Se o livro não for encontrado, retorna uma resposta com status 404 (Not Found).
-        return new APIGatewayProxyResponse { StatusCode = 404 };
-    }
+            // Salva o pedido no DynamoDB
+            await SavePedido(pedido);
 
-    // Atualiza um livro existente na tabela do DynamoDB.
-    public async Task<APIGatewayProxyResponse> UpdateBook(APIGatewayProxyRequest request, ILambdaContext context)
-    {
-        // Obtém o ID do livro a partir do parâmetro de caminho da requisição.
-        var bookId = request.PathParameters["bookId"];
+            // Envia a mensagem para a fila do SQS
+            await SendSqsMessage(pedido);
 
-        // Deserializa o objeto 'Book' a partir do corpo da requisição.
-        var updatedBook = JsonSerializer.Deserialize<Book>(request.Body);
+            // Salva os dados do pedido e do envio no S3
+            await SaveToS3(pedido, pedido.UrlTransportadora);
 
-        // Cria um cliente para o DynamoDB.
-        var dbClient = new AmazonDynamoDBClient(RegionEndpoint.GetBySystemName(GetRegionName()));
-
-        // Cria um contexto para interagir com o DynamoDB.
-        using (var dbContext = new DynamoDBContext(dbClient))
-        {
-            // Atualiza o livro na tabela.
-            await dbContext.SaveAsync(updatedBook);
-        }
-
-        // Cria uma resposta com a mensagem de sucesso.
-        var response = GetDefaultResponse();
-        response.Body = JsonSerializer.Serialize(new { Message = "Book updated successfully!" });
-
-        // Retorna a resposta.
-        return response;
-    }
-
-    // Exclui um livro da tabela do DynamoDB pelo seu ID.
-    public async Task<APIGatewayProxyResponse> DeleteBook(APIGatewayProxyRequest request, ILambdaContext context)
-    {
-        // Obtém o ID do livro a partir do parâmetro de caminho da requisição.
-        var bookId = request.PathParameters["bookId"];
-
-        // Cria um cliente para o DynamoDB.
-        var dbClient = new AmazonDynamoDBClient(RegionEndpoint.GetBySystemName(GetRegionName()));
-
-        // Cria um contexto para interagir com o DynamoDB.
-        using (var dbContext = new DynamoDBContext(dbClient))
-        {
-            // Exclui o livro da tabela.
-            await dbContext.DeleteAsync<Book>(bookId);
-        }
-
-        // Cria uma resposta com a mensagem de sucesso.
-        var response = GetDefaultResponse();
-        response.Body = JsonSerializer.Serialize(new { Message = "Book deleted successfully!" });
-
-        // Retorna a resposta.
-        return response;
-    }
-
-    // Obtém uma lista de todos os livros da tabela do DynamoDB.
-    public async Task<APIGatewayProxyResponse> GetAllBooks(APIGatewayProxyRequest request, ILambdaContext context)
-    {
-        // Cria um cliente para o DynamoDB.
-        var dbClient = new AmazonDynamoDBClient(RegionEndpoint.GetBySystemName(GetRegionName()));
-
-        // Cria um contexto para interagir com o DynamoDB.
-        using (var dbContext = new DynamoDBContext(dbClient))
-        {
-            // Define a consulta para buscar todos os livros.
-            var query = dbContext.QueryAsync<Book>(new DynamoDBOperationConfig { OverrideTableName = TABLE_NAME });
-
-            // Itera sobre os resultados da consulta.
-            var books = new List<Book>();
-            do
-            {
-                var response = await query.GetNextSetAsync();
-                books.AddRange(response);
-            } while (!query.IsDone);
-
-            // Cria uma resposta com a lista de livros.
+            // Retorna uma resposta de sucesso
             var response = GetDefaultResponse();
-            response.Body = JsonSerializer.Serialize(books);
-
-            // Retorna a resposta.
+            response.Body = JsonSerializer.Serialize(new { Message = "Pedido criado com sucesso!" });
+            return response;
+        }
+        catch (Exception ex)
+        {
+            // Caso haja algum erro, retorna uma resposta de erro
+            var response = GetDefaultResponse();
+            response.StatusCode = 500;
+            response.Body = JsonSerializer.Serialize(new { Message = $"Erro ao criar pedido: {ex.Message}" });
             return response;
         }
     }
+}
+
+// Modelo de dados do pedido
+public class Pedido
+{
+    public List<Produto> Produtos { get; set; }
+    public string UrlTransportadora { get; set; }
+}
+
+// Modelo de dados do produto
+public class Produto
+{
+    public int IdProduto { get; set; }
+    public int Quantidade { get; set; }
+    public string NomeProduto { get; set; }
 }
